@@ -1,0 +1,55 @@
+# Setup to block bots from spamming SSH
+[DEFAULT]
+before = paths-debian.conf
+ignoreip = 127.0.0.1/8
+
+#3 attempts in 10 minutes, 10 minute ban
+bantime = 600
+findtime = 600
+maxretry = 3
+
+#Debian
+backend = systemd
+
+#Useful for diagnostics
+usedns = warn
+
+logencoding = auto
+enable = false
+filter = %(__name__)s
+
+#email settings
+destemail = alex@localhost
+sender = root@localhost
+mta = sendmail
+
+protocol = tcp
+
+chain = INPUT
+
+#Ports to ban
+port = 0:65535
+
+#Default banning action.
+banaction = iptables-multiport
+action_ = %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
+
+#This will ban most of your automated bot attacks.
+#The ban time is 1 year. It's excessive, but its worth
+#Will massively inflate your iptables.
+[aggressive-ssh]
+
+port    = ssh
+logpath = %(sshd_log)s
+filter = sshd
+findtime = 4
+bantime = 31557600
+maxretry = 3
+enabled = true
+
+[sshd]
+
+port    = ssh
+logpath = %(sshd_log)s
+enabled = true
+maxretry = 4
